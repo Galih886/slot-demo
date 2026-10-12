@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Admin Console</title>
+<link rel="stylesheet" href="style.css"></head>
+<body class="adm"><main>
+<section><h2>Status pemain (live)</h2><div class="kv">
+<div><small>Saldo</small><b id="b">-</b></div><div><small>Free Spins</small><b id="fa">-</b></div>
+<div><small>Sisa spin FS</small><b id="fl">-</b></div><div><small>Scatter 胡 spin terakhir</small><b id="fsc">-</b></div>
+<div><small>Total menang putaran FS</small><b id="ft">-</b></div></div></section>
+<section><h2>Saldo pemain</h2><div class="row"><input id="in" type="number" min="0" step="any" placeholder="Jumlah saldo">
+<button id="set">Set saldo</button><button id="rst">Reset 100.000</button></div></section>
+<section><h2>Mode RTP simulasi</h2>
+<label><input type="radio" name="m" value="gacor"> Sangat Gacor / Max Win (99% win rate)</label>
+<label><input type="radio" name="m" value="normal"> Normal Mode (90%)</label>
+<label><input type="radio" name="m" value="rungkad"> Rungkad Mode (30% win rate)</label></section>
+<section><h2>Force Free Spins</h2><div class="row"><button id="ff">Paksa Free Spins di spin berikutnya</button><span id="fst"></span></div></section>
+<section><h2>History log</h2><div class="row" style="margin-bottom:8px"><button id="clr">Hapus log</button></div>
+<div class="tw"><table><thead><tr><th>Waktu</th><th>Jenis</th><th>Taruhan</th><th>Scatter 胡</th><th>Menang spin</th><th>FS ke / sisa</th><th>Total menang FS</th><th>Saldo</th></tr></thead><tbody id="tb"></tbody></table></div></section>
+</main><script>
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const $=i=>document.getElementById(i),f=n=>(+n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const cfg=()=>Object.assign({mode:'normal',forceFS:false},LS.get('mw2_cfg',{}));
+function r(){const c=cfg(),l=LS.get('mw2_live',{});
+ $('b').textContent=f(LS.get('mw2_bal',100000));$('fa').textContent=l.active?'Aktif':'Tidak';$('fl').textContent=l.left||0;$('fsc').textContent=l.sc||0;$('ft').textContent=f(l.total||0);
+ document.querySelectorAll('[name=m]').forEach(x=>x.checked=x.value===c.mode);
+ $('fst').textContent=c.forceFS?'Aktif: menunggu spin berikutnya':'Tidak aktif';
+ $('tb').innerHTML=LS.get('mw2_log',[]).map(e=>{const fs=e.type==='FS',en=e.type==='FS-END';
+  return `<tr class="${fs?'fs':en?'end':''}"><td>${new Date(e.t).toLocaleTimeString()}</td><td>${en?'FS selesai':fs?'Free Spin':e.trig?'Spin (picu FS)':'Spin'}</td><td>${e.bet?f(e.bet):'-'}</td><td>${en?'-':e.sc}</td><td>${en?'-':f(e.win)}</td><td>${fs?e.n+' / '+e.left:'-'}</td><td>${fs||en?f(e.fsTotal):'-'}</td><td>${f(e.bal)}</td></tr>`}).join('')}
+$('set').onclick=()=>{const n=parseFloat($('in').value);if(isFinite(n)&&n>=0){LS.set('mw2_bal',n);r()}};
+$('rst').onclick=()=>{LS.set('mw2_bal',100000);r()};
+document.querySelectorAll('[name=m]').forEach(x=>x.onchange=()=>{LS.set('mw2_cfg',Object.assign(cfg(),{mode:x.value}));r()});
+$('ff').onclick=()=>{LS.set('mw2_cfg',Object.assign(cfg(),{forceFS:true}));r()};
+$('clr').onclick=()=>{LS.set('mw2_log',[]);r()};
+addEventListener('storage',r);r();
+</script></body></html>
+ 
